@@ -1,25 +1,28 @@
 <?php
 header('Content-Type: application/json');
 
-$response = array('success' => false);
-
-if (isset($_POST['guess'], $_POST['word'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $guess = strtoupper($_POST['guess']);
     $word = strtoupper($_POST['word']);
-    $wordLength = strlen($word);
-    $result = array_fill(0, $wordLength, 'absent');
+    $response = ['result' => [], 'victory' => false];
 
-    for ($i = 0; $i < $wordLength; $i++) {
+    for ($i = 0; $i < strlen($word); $i++) {
         if ($guess[$i] === $word[$i]) {
-            $result[$i] = 'correct';
+            $response['result'][$i] = 'correct';
         } elseif (strpos($word, $guess[$i]) !== false) {
-            $result[$i] = 'present';
+            $response['result'][$i] = 'present';
+        } else {
+            $response['result'][$i] = 'absent';
         }
     }
 
-    $response['success'] = true;
-    $response['result'] = $result;
-    $response['victory'] = $guess === $word;
+    if ($guess === $word) {
+        $response['victory'] = true;
+    }
+
+    echo json_encode(['success' => true] + $response);
+    exit;
 }
 
-echo json_encode($response);
+echo json_encode(['success' => false, 'message' => 'Requête invalide.']);
+exit;

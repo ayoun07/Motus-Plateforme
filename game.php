@@ -43,6 +43,10 @@ $wordLength = strlen($word);
             grid-template-columns: repeat(<?= $wordLength ?>, 50px);
             gap: 10px;
             margin-bottom: 20px;
+            background-color: #1e90ff;
+            /* Fond bleu pour la grille */
+            padding: 10px;
+            border-radius: 10px;
         }
 
         .cell {
@@ -54,23 +58,35 @@ $wordLength = strlen($word);
             font-size: 24px;
             border: 2px solid #ddd;
             text-transform: uppercase;
+            background-color: blue;
+            /* Fond bleu par défaut pour les lettres */
+            color: white;
+            position: relative;
         }
 
         .correct {
             background-color: red;
+            /* Fond rouge rempli pour les lettres bien placées */
             color: white;
+            border-radius: 0;
+            /* Assurez-vous que c'est un carré */
         }
 
         .present {
             background-color: yellow;
+            /* Fond jaune rempli pour les lettres mal placées mais présentes */
             color: black;
+            border-radius: 50%;
+            /* Cercle pour les lettres mal placées mais présentes */
         }
 
         .absent {
             background-color: blue;
+            /* Fond bleu pour les lettres absentes */
             color: white;
         }
     </style>
+
 </head>
 
 <body>
@@ -173,6 +189,7 @@ $wordLength = strlen($word);
                 });
         }
     </script>
+
 </body>
 
 </html>
