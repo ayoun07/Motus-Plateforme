@@ -19,6 +19,39 @@ if ($result === false) {
 $word = strtoupper($result['word']);
 $firstLetter = $word[0];
 $wordLength = strlen($word);
+$userId = $_SESSION['user_id'] ?? null;
+
+if ($userId === null) {
+    die('Utilisateur non connecté.');
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $guess = $_POST['guess'] ?? '';
+    $word = $_POST['word'] ?? '';
+
+    // Effectuer la vérification ici, par exemple via une fonction ou une requête
+    $victory = ($guess === $word);
+
+    if ($victory) {
+        // Récupérer l'actuel score et victoires du joueur
+        $stmt = $pdo->prepare("SELECT score, victories FROM scores WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        $currentData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($currentData) {
+            // Mettre à jour le score et le nombre de victoires
+            $newScore = $currentData['score'] + 50; // Ajoute 50 points pour une victoire
+            $newVictories = $currentData['victories'] + 1;
+
+            $updateStmt = $pdo->prepare("UPDATE scores SET score = ?, victories = ? WHERE user_id = ?");
+            $updateStmt->execute([$newScore, $newVictories, $userId]);
+        } else {
+            // Créer une nouvelle entrée pour l'utilisateur si elle n'existe pas encore
+            $insertStmt = $pdo->prepare("INSERT INTO scores (user_id, score, victories) VALUES (?, 50, 1)");
+            $insertStmt->execute([$userId]);
+        }
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -99,8 +132,13 @@ $wordLength = strlen($word);
                 <?php endfor; ?>
             <?php endfor; ?>
         </div>
-        <button id="submitGuess">Soumettre</button>
-        <p id="message"></p>
+        <div class="navigation-buttons">
+            <button onclick="window.location.href='index.php'">Retour</button>
+            <button id="submitGuess">Soumettre</button>
+            <button onclick="window.location.href='wall_of_fame.php'">Meilleurs scores</button>
+                <br>
+            <p id="message"></p>
+        </div>
     </div>
     <script>
         const word = '<?= $word ?>';
@@ -134,60 +172,57 @@ $wordLength = strlen($word);
         document.getElementById('submitGuess').addEventListener('click', submitGuess);
 
         function submitGuess() {
-            if (currentCol !== wordLength) {
-                document.getElementById('message').textContent = 'Veuillez compléter toutes les lettres de la ligne.';
-                return;
-            }
+    if (currentCol !== wordLength) {
+        document.getElementById('message').textContent = 'Veuillez compléter toutes les lettres de la ligne.';
+        return;
+    }
 
-            const guess = Array.from({
-                length: wordLength
-            }, (_, i) => document.getElementById(`cell-${currentRow}-${i}`).textContent).join('');
-            if (guess.length !== wordLength) {
-                document.getElementById('message').textContent = 'Le mot doit contenir ' + wordLength + ' lettres.';
-                return;
-            }
-
-            fetch('check_guess.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: 'guess=' + guess + '&word=' + word
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        for (let i = 0; i < wordLength; i++) {
-                            const cell = document.getElementById(`cell-${currentRow}-${i}`);
-                            if (data.result[i] === 'correct') {
-                                cell.classList.add('correct');
-                            } else if (data.result[i] === 'present') {
-                                cell.classList.add('present');
-                            } else {
-                                cell.classList.add('absent');
-                            }
-                            cell.setAttribute('contenteditable', 'false');
-                        }
-
-                        if (data.victory) {
-                            document.getElementById('message').textContent = 'Félicitations, vous avez trouvé le mot !';
-                            document.getElementById('submitGuess').disabled = true;
-                        } else {
-                            currentRow++;
-                            currentCol = 0;
-                            if (currentRow < 6) {
-                                document.getElementById(`cell-${currentRow}-0`).textContent = word[0];
-                                document.getElementById(`cell-${currentRow}-0`).setAttribute('contenteditable', 'false');
-                            } else {
-                                document.getElementById('message').textContent = 'Vous avez épuisé toutes vos tentatives. Le mot était : ' + word;
-                                document.getElementById('submitGuess').disabled = true;
-                            }
-                        }
+    const guess = Array.from({
+        length: wordLength
+    }, (_, i) => document.getElementById(`cell-${currentRow}-${i}`).textContent).join('');
+    
+    fetch('check_guess.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: `guess=${encodeURIComponent(guess)}&word=${encodeURIComponent(word)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                for (let i = 0; i < wordLength; i++) {
+                    const cell = document.getElementById(`cell-${currentRow}-${i}`);
+                    if (data.result[i] === 'correct') {
+                        cell.classList.add('correct');
+                    } else if (data.result[i] === 'present') {
+                        cell.classList.add('present');
                     } else {
-                        document.getElementById('message').textContent = data.message;
+                        cell.classList.add('absent');
                     }
-                });
-        }
+                    cell.setAttribute('contenteditable', 'false');
+                }
+
+                if (data.victory) {
+                    document.getElementById('message').textContent = 'Félicitations, vous avez trouvé le mot !';
+                    document.getElementById('submitGuess').disabled = true;
+                } else {
+                    currentRow++;
+                    currentCol = 0;
+                    if (currentRow < 6) {
+                        document.getElementById(`cell-${currentRow}-0`).textContent = word[0];
+                        document.getElementById(`cell-${currentRow}-0`).setAttribute('contenteditable', 'false');
+                    } else {
+                        document.getElementById('message').textContent = 'Vous avez épuisé toutes vos tentatives. Le mot était : ' + word;
+                        document.getElementById('submitGuess').disabled = true;
+                    }
+                }
+            } else {
+                document.getElementById('message').textContent = data.message;
+            }
+        });
+}
+
     </script>
 
 </body>

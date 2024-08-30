@@ -2,7 +2,8 @@
 session_start();
 include('db.php');
 
-$stmt = $pdo->query('SELECT username, score FROM scores JOIN users ON scores.user_id = users.id ORDER BY score DESC LIMIT 10');
+// Récupérer les 10 meilleurs scores et victoires
+$stmt = $pdo->query('SELECT username, score, victories FROM scores JOIN users ON scores.user_id = users.id ORDER BY score DESC LIMIT 10');
 $scores = $stmt->fetchAll();
 ?>
 
@@ -25,6 +26,7 @@ $scores = $stmt->fetchAll();
                 <tr>
                     <th>Utilisateur</th>
                     <th>Score</th>
+                    <th>Victoires</th>
                 </tr>
             </thead>
             <tbody>
@@ -32,6 +34,7 @@ $scores = $stmt->fetchAll();
                     <tr>
                         <td><?= htmlspecialchars($score['username']) ?></td>
                         <td><?= htmlspecialchars($score['score']) ?></td>
+                        <td><?= htmlspecialchars($score['victories']) ?></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>

@@ -43,3 +43,26 @@ button:hover {
 p {
     color: red;
 }
+
+/* Ajoutez ce style à styles.css */
+.navigation-buttons {
+    display: flex;
+    justify-content: space-between; /* Espace égal entre les boutons */
+    flex-direction: row;
+}
+
+.navigation-buttons button {
+    flex: 1; /* Chaque bouton prend une largeur égale */
+    margin: 0 10px; /* Espacement horizontal entre les boutons */
+    background-color: #ff0055; /* Couleur de fond des boutons */
+    color: white; /* Couleur du texte des boutons */
+    padding: 10px 20px; /* Espacement interne des boutons */
+    border: none; /* Supprimer les bordures */
+    border-radius: 5px; /* Bordures arrondies */
+    cursor: pointer; /* Curseur pointeur sur les boutons */
+}
+
+.navigation-buttons button:hover {
+    background-color: #ff3366; /* Couleur de fond au survol */
+}
+

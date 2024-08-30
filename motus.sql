@@ -20,7 +20,9 @@ CREATE TABLE words (
 CREATE TABLE scores (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT,
-  score INT,
+  score INT DEFAULT 0,
+  victories INT DEFAULT 0,
   date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
